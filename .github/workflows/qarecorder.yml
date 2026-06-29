@@ -1,0 +1,67 @@
+name: QA Recorder Library
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build library
+        run: ./gradlew :qarecorder:build :qarecorder:publishReleasePublicationToMavenLocal
+
+      - name: Upload release AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: qarecorder-release-aar
+          path: qarecorder/build/outputs/aar/qarecorder-release.aar
+
+  publish:
+    name: Publish to GitHub Packages
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_NAME: ${{ github.ref_name }}
+        run: ./gradlew :qarecorder:publishReleasePublicationToGitHubPackagesRepository -PVERSION_NAME="${VERSION_NAME#v}"
