@@ -2,6 +2,8 @@
 
 QA Recorder is an Android library for turning a tester's manual app session into readable QA steps. It is intended for debug and QA builds where someone explores a real app, records what they do, then copies Markdown steps into a ticket, bug report, or test note.
 
+Setup is intentionally simple: initialize it once from your `Application`, and QA Recorder observes Compose and classic View components without any manual wrapping.
+
 It is not a replay engine and does not try to generate automation scripts. The output is meant to be human-readable repro or exploratory-test documentation that needs little cleanup.
 
 ## What It Records
@@ -60,11 +62,26 @@ Touches on the recorder overlay are ignored so the controls do not pollute the c
 
 ## Setup
 
-Add the library to a host app:
+Add JitPack to `settings.gradle.kts`:
 
 ```kotlin
-implementation("dev.rebelonion.qarecord:qarecorder:0.1.0")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+    }
+}
 ```
+
+Then add the dependency:
+
+```kotlin
+implementation("com.github.rebelonion:QARecord:Tag")
+```
+
+Replace `Tag` with a release tag.
 
 Install it from `Application.onCreate()` and gate it out of release builds:
 
